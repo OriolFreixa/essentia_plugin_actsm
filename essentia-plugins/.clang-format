@@ -1,0 +1,74 @@
+# clang-format for modern audio‑plugin projects (C++20)
+---
+Language:                Cpp
+Standard:                c++20
+BasedOnStyle:            LLVM
+
+# --- whitespace & layout ---
+IndentWidth:             4
+UseTab:                  Never
+ColumnLimit:             120
+NamespaceIndentation:    All
+ConstructorInitializerIndentWidth: 4
+AllowShortFunctionsOnASingleLine: Inline
+SeparateDefinitionBlocks: Always    # needs clang-format 17+
+
+# --- constructor-initializer lists ---------------------------------
+PackConstructorInitializers: Never      # always break – one per line
+BreakConstructorInitializers: BeforeComma   # “, nextInit” layout
+
+# --- brace wrapping ---
+BreakBeforeBraces:       Custom     # must be 'Custom' when BraceWrapping block present
+BraceWrapping:
+  AfterClass:            true
+  AfterControlStatement: true
+  AfterEnum:             true
+  AfterExternBlock:      false
+  AfterFunction:         true
+  AfterNamespace:        true
+  AfterObjCDeclaration:  false
+  AfterStruct:           true
+  AfterUnion:            true
+  BeforeCatch:           true
+  BeforeElse:            true
+  BeforeLambdaBody:      false
+  BeforeWhile:           false
+  IndentBraces:          false
+  SplitEmptyFunction:    false
+  SplitEmptyRecord:      false
+  SplitEmptyNamespace:   false
+
+# --- alignment ---
+AlignConsecutiveAssignments:  true
+AlignConsecutiveDeclarations: true
+BinPackParameters:            false
+BinPackArguments:             false
+DerivePointerAlignment:       false
+PointerAlignment:             Left
+IndentAccessModifiers:        false        # flush‑left access labels
+AccessModifierOffset:         -4           # pull specifiers back to column 0
+AlignAfterOpenBracket:        Align
+AllowAllArgumentsOnNextLine:  false
+PenaltyBreakBeforeFirstCallParameter: 19    # default value to avoid over‑eager breaks
+
+# --- includes ---
+SortIncludes:      true
+IncludeBlocks:     Preserve
+IncludeCategories:
+  - Regex:         '^(<.*\\.h>)'
+    Priority:      1
+  - Regex:         '^(<|")juce(_.*|/juce_.*)'
+    Priority:      2
+  - Regex:         '.*'
+    Priority:      3
+
+# --- comments ---
+ReflowComments:    true
+CommentPragmas:    '^//!|^/\\*\\*'
+
+# --- misc modern C++ ---
+Cpp11BracedListStyle:          true
+SpaceAfterCStyleCast:          true
+SpaceInEmptyParentheses:       false
+SpacesInAngles:                false
+SpacesInSquareBrackets:        false
