@@ -73,6 +73,9 @@ private:
     essentia::Real danceabilityValue = 0.f;
     std::vector<essentia::Real> dfaValues;
     std::vector<essentia::Real> essentiaBuffer;
+    size_t analysisWindowSamples = 0;
+    size_t computeIntervalSamples = 0;
+    size_t samplesSinceDanceabilityCompute = 0;
     
     int maxSampleSize {1024};
     //==============================================================================

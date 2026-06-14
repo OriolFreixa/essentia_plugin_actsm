@@ -120,6 +120,8 @@ void EssentiaPluginAudioProcessor::prepareToPlay (double sampleRate, int samples
     juce::ignoreUnused(samplesPerBlock);
     
     essentia::init();
+
+    delete danceability;
     
     danceability = AlgorithmFactory::create("Danceability");
     danceability->configure("sampleRate", sampleRate);
@@ -128,11 +130,17 @@ void EssentiaPluginAudioProcessor::prepareToPlay (double sampleRate, int samples
     danceability->input("signal").set(essentiaBuffer);
     danceability->output("danceability").set(danceabilityValue);
     danceability->output("dfa").set(dfaValues);
-  
-    // prime once with a dummy frame to avoid allocations in the audio thread
-    const auto analysisSamples = static_cast<size_t>(juce::jmax(1.0, sampleRate));
-    essentiaBuffer.assign(analysisSamples, 0.f);
-    danceability->compute();
+
+    constexpr double analysisWindowSeconds = 10.0;
+    constexpr double computeIntervalSeconds = 1.0;
+
+    analysisWindowSamples = static_cast<size_t>(juce::jmax(1.0, sampleRate * analysisWindowSeconds));
+    computeIntervalSamples = static_cast<size_t>(juce::jmax(1.0, sampleRate * computeIntervalSeconds));
+    samplesSinceDanceabilityCompute = computeIntervalSamples;
+    danceabilityValue = 0.f;
+
+    essentiaBuffer.clear();
+    essentiaBuffer.reserve(analysisWindowSamples + static_cast<size_t>(juce::jmax(1, samplesPerBlock)));
 }
 
 void EssentiaPluginAudioProcessor::releaseResources()
@@ -141,6 +149,10 @@ void EssentiaPluginAudioProcessor::releaseResources()
     danceability = nullptr;
     dfaValues.clear();
     essentiaBuffer.clear();
+    analysisWindowSamples = 0;
+    computeIntervalSamples = 0;
+    samplesSinceDanceabilityCompute = 0;
+    danceabilityValue = 0.f;
     essentia::shutdown();
 }
 
@@ -174,14 +186,40 @@ void EssentiaPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
 {
     juce::ignoreUnused(midiMessages);
 
-    // process single-channel for now
-    const float* in = buffer.getReadPointer(0);
-    essentiaBuffer.assign(in, in + buffer.getNumSamples());
-    
-    const auto minFrameSamples = static_cast<size_t>(juce::jmax(1.0, getSampleRate() * 0.01));
-    if (essentiaBuffer.size() < minFrameSamples)
-        essentiaBuffer.resize(minFrameSamples, 0.f);
+    if (danceability == nullptr || analysisWindowSamples == 0 || computeIntervalSamples == 0)
+        return;
 
+    const int numSamples = buffer.getNumSamples();
+    const int numInputChannels = juce::jmin(buffer.getNumChannels(), getTotalNumInputChannels());
+    if (numSamples <= 0 || numInputChannels <= 0)
+        return;
+
+    const auto previousSize = essentiaBuffer.size();
+    essentiaBuffer.resize(previousSize + static_cast<size_t>(numSamples));
+
+    for (int sample = 0; sample < numSamples; ++sample)
+    {
+        float monoSample = 0.f;
+        for (int channel = 0; channel < numInputChannels; ++channel)
+            monoSample += buffer.getSample(channel, sample);
+
+        essentiaBuffer[previousSize + static_cast<size_t>(sample)] = monoSample / static_cast<float>(numInputChannels);
+    }
+
+    if (essentiaBuffer.size() > analysisWindowSamples)
+    {
+        const auto samplesToDrop = essentiaBuffer.size() - analysisWindowSamples;
+        essentiaBuffer.erase(essentiaBuffer.begin(), essentiaBuffer.begin() + static_cast<std::ptrdiff_t>(samplesToDrop));
+    }
+
+    if (essentiaBuffer.size() < analysisWindowSamples)
+        return;
+
+    samplesSinceDanceabilityCompute += static_cast<size_t>(numSamples);
+    if (samplesSinceDanceabilityCompute < computeIntervalSamples)
+        return;
+
+    samplesSinceDanceabilityCompute = 0;
     danceability->compute();
 }
 

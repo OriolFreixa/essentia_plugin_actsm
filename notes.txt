@@ -1,0 +1,13 @@
+Notes for the report of the assignment:
+- We started with the RMS analyzer. Decided to adapt it to create a Danceability analyzer
+- Danceability cannot be computed like RMS on each audio callback. Essentia's
+  Danceability algorithm needs a longer signal because it first builds 10 ms
+  frames and then evaluates tau windows up to 8800 ms by default. A JUCE host
+  block is usually far shorter, so the algorithm reports "signal is too short"
+  and returns 0. The plugin should keep a rolling analysis buffer, around 10 s,
+  and compute the descriptor periodically from that window.
+
+- The Danceability algorithm also outputs a DFA vector. The plugin connects and
+  stores this output so the Essentia algorithm is fully supported, but it is not
+  shown in the UI because it is an intermediate technical descriptor. The user-
+  facing value is the final scalar danceability estimate.
