@@ -49,6 +49,55 @@ EssentiaPluginAudioProcessorEditor::EssentiaPluginAudioProcessorEditor(EssentiaP
     danceabilityUnitLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(danceabilityUnitLabel);
 
+    minTauLabel.setText("minTau", juce::dontSendNotification);
+    minTauLabel.setFont(juce::Font(12.0f));
+    minTauLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
+    minTauLabel.setJustificationType(juce::Justification::centredLeft);
+    addAndMakeVisible(minTauLabel);
+
+    maxTauLabel.setText("maxTau", juce::dontSendNotification);
+    maxTauLabel.setFont(juce::Font(12.0f));
+    maxTauLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
+    maxTauLabel.setJustificationType(juce::Justification::centredLeft);
+    addAndMakeVisible(maxTauLabel);
+
+    tauMultiplierLabel.setText("tauMultiplier", juce::dontSendNotification);
+    tauMultiplierLabel.setFont(juce::Font(12.0f));
+    tauMultiplierLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
+    tauMultiplierLabel.setJustificationType(juce::Justification::centredLeft);
+    addAndMakeVisible(tauMultiplierLabel);
+
+    analysisWindowLabel.setText("window (s)", juce::dontSendNotification);
+    analysisWindowLabel.setFont(juce::Font(12.0f));
+    analysisWindowLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
+    analysisWindowLabel.setJustificationType(juce::Justification::centredLeft);
+    addAndMakeVisible(analysisWindowLabel);
+
+    minTauSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+    minTauSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 64, 20);
+    addAndMakeVisible(minTauSlider);
+
+    maxTauSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+    maxTauSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 64, 20);
+    addAndMakeVisible(maxTauSlider);
+
+    tauMultiplierSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+    tauMultiplierSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 64, 20);
+    addAndMakeVisible(tauMultiplierSlider);
+
+    analysisWindowSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+    analysisWindowSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 64, 20);
+    addAndMakeVisible(analysisWindowSlider);
+
+    minTauAttachment = std::make_unique<SliderAttachment>(processorRef.apvts, "minTau", minTauSlider);
+    maxTauAttachment = std::make_unique<SliderAttachment>(processorRef.apvts, "maxTau", maxTauSlider);
+    tauMultiplierAttachment = std::make_unique<SliderAttachment>(processorRef.apvts,
+                                                                 "tauMultiplier",
+                                                                 tauMultiplierSlider);
+    analysisWindowAttachment = std::make_unique<SliderAttachment>(processorRef.apvts,
+                                                                  "analysisWindowSeconds",
+                                                                  analysisWindowSlider);
+
     // Load logos from binary data
     upfLogo      = juce::ImageCache::getFromMemory(BinaryData::upflogo_png, BinaryData::upflogo_pngSize);
     essentiaLogo = juce::ImageCache::getFromMemory(BinaryData::essentia_logo_png, BinaryData::essentia_logo_pngSize);
@@ -61,7 +110,7 @@ EssentiaPluginAudioProcessorEditor::EssentiaPluginAudioProcessorEditor(EssentiaP
     addAndMakeVisible(poweredByLabel);
 
     // Set plugin size (fixed, not resizable) - compact and focused
-    setSize(400, 350);
+    setSize(400, 470);
     setResizable(false, false);
 
     startTimerHz(30);
@@ -100,8 +149,8 @@ void EssentiaPluginAudioProcessorEditor::paint(juce::Graphics& g)
     // Draw value display background with more prominent styling
     const auto danceabilityValueBounds = getLocalBounds()
                                        .reduced(30, 0)
-                                       .withY(static_cast<int>(getHeight() * 0.30f))
-                                       .withHeight(static_cast<int>(getHeight() * 0.30f))
+                                       .withY(static_cast<int>(getHeight() * 0.25f))
+                                       .withHeight(static_cast<int>(getHeight() * 0.22f))
                                        .withWidth(getWidth() - 60)
                                        .toFloat();
 
@@ -158,8 +207,8 @@ void EssentiaPluginAudioProcessorEditor::resized()
     // Fixed layout values for cleaner, more focused layout
     const float titleY         = 0.08f;
     const float subtitleY      = 0.16f;
-    const float danceabilityValueY = 0.36f;
-    const float danceabilityUnitY  = 0.55f;
+    const float danceabilityValueY = 0.28f;
+    const float danceabilityUnitY  = 0.43f;
     const float footerBaseline = 20.0f;
     const float footerTextGap  = 5.4f;
 
@@ -168,8 +217,17 @@ void EssentiaPluginAudioProcessorEditor::resized()
     subtitleLabel.setBoundsRelative(0.0f, subtitleY, 1.0f, 0.05f);
 
     // Larger, more prominent value display
-    danceabilityValueLabel.setBoundsRelative(0.1f, danceabilityValueY, 0.8f, 0.14f);
+    danceabilityValueLabel.setBoundsRelative(0.1f, danceabilityValueY, 0.8f, 0.12f);
     danceabilityUnitLabel.setBoundsRelative(0.1f, danceabilityUnitY, 0.8f, 0.04f);
+
+    minTauLabel.setBoundsRelative(0.10f, 0.51f, 0.28f, 0.05f);
+    minTauSlider.setBoundsRelative(0.34f, 0.51f, 0.56f, 0.05f);
+    maxTauLabel.setBoundsRelative(0.10f, 0.59f, 0.28f, 0.05f);
+    maxTauSlider.setBoundsRelative(0.34f, 0.59f, 0.56f, 0.05f);
+    tauMultiplierLabel.setBoundsRelative(0.10f, 0.67f, 0.28f, 0.05f);
+    tauMultiplierSlider.setBoundsRelative(0.34f, 0.67f, 0.56f, 0.05f);
+    analysisWindowLabel.setBoundsRelative(0.10f, 0.75f, 0.28f, 0.05f);
+    analysisWindowSlider.setBoundsRelative(0.34f, 0.75f, 0.56f, 0.05f);
 
     // Position "powered by" text above Essentia logo
     const float logoHeight   = 32.0f; // Compact for the layout

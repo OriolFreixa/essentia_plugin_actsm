@@ -26,6 +26,8 @@ public:
     void mouseMove(const juce::MouseEvent& event) override;
 
 private:
+    using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
+
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     EssentiaPluginAudioProcessor& processorRef;
@@ -36,6 +38,18 @@ private:
     juce::Label subtitleLabel;
     juce::Label danceabilityValueLabel;
     juce::Label danceabilityUnitLabel;
+    juce::Label minTauLabel;
+    juce::Label maxTauLabel;
+    juce::Label tauMultiplierLabel;
+    juce::Label analysisWindowLabel;
+    juce::Slider minTauSlider;
+    juce::Slider maxTauSlider;
+    juce::Slider tauMultiplierSlider;
+    juce::Slider analysisWindowSlider;
+    std::unique_ptr<SliderAttachment> minTauAttachment;
+    std::unique_ptr<SliderAttachment> maxTauAttachment;
+    std::unique_ptr<SliderAttachment> tauMultiplierAttachment;
+    std::unique_ptr<SliderAttachment> analysisWindowAttachment;
 
     // Custom styling
     ModernLookAndFeel modernLF;

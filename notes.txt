@@ -11,3 +11,13 @@ Notes for the report of the assignment:
   stores this output so the Essentia algorithm is fully supported, but it is not
   shown in the UI because it is an intermediate technical descriptor. The user-
   facing value is the final scalar danceability estimate.
+
+- Optional activity completed: exposed the Danceability parameters `minTau`,
+  `maxTau`, and `tauMultiplier` in the plugin UI as proper JUCE audio
+  parameters using `AudioProcessorValueTreeState` and slider attachments, so
+  hosts can manage and persist them like normal plugin parameters.
+
+- Added an extra APVTS parameter for the analysis window length. This controls
+  how many seconds of recent mono audio are kept in the rolling `essentiaBuffer`
+  before calling Danceability, so users can trade off responsiveness against a
+  longer analysis context.

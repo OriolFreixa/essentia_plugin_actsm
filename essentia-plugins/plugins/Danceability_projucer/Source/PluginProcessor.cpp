@@ -16,6 +16,37 @@ using essentia::Real;
 //==============================================================================
 // clang-format off
 
+juce::AudioProcessorValueTreeState::ParameterLayout EssentiaPluginAudioProcessor::createParameterLayout()
+{
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID {"minTau", 1},
+        "minTau",
+        juce::NormalisableRange<float> {50.f, 1000.f, 10.f},
+        310.f));
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID {"maxTau", 1},
+        "maxTau",
+        juce::NormalisableRange<float> {1000.f, 8800.f, 100.f},
+        8800.f));
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID {"tauMultiplier", 1},
+        "tauMultiplier",
+        juce::NormalisableRange<float> {1.01f, 1.5f, 0.01f},
+        1.1f));
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID {"analysisWindowSeconds", 1},
+        "Analysis Window",
+        juce::NormalisableRange<float> {1.f, 15.f, 0.1f},
+        10.f));
+
+    return {params.begin(), params.end()};
+}
+
 EssentiaPluginAudioProcessor::EssentiaPluginAudioProcessor()
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
@@ -23,8 +54,9 @@ EssentiaPluginAudioProcessor::EssentiaPluginAudioProcessor()
                        .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                     #endif
+                      #endif
                        )
+     , apvts(*this, nullptr, "PARAMETERS", createParameterLayout())
 {
 }
 // clang-format on
@@ -114,33 +146,55 @@ void EssentiaPluginAudioProcessor::applyZeroPadding(std::vector<Real>& buffer, i
     // If equal, do nothing
 }
 
+void EssentiaPluginAudioProcessor::configureDanceability()
+{
+    if (danceability == nullptr)
+        return;
+
+    const auto minTau = apvts.getRawParameterValue("minTau")->load();
+    const auto maxTau = apvts.getRawParameterValue("maxTau")->load();
+    const auto tauMultiplier = apvts.getRawParameterValue("tauMultiplier")->load();
+
+    danceability->configure("minTau",
+                            minTau,
+                            "maxTau",
+                            maxTau,
+                            "tauMultiplier",
+                            tauMultiplier,
+                            "sampleRate",
+                            currentSampleRate);
+}
+
 //==============================================================================
 void EssentiaPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     juce::ignoreUnused(samplesPerBlock);
+    currentSampleRate = sampleRate;
     
     essentia::init();
 
     delete danceability;
     
     danceability = AlgorithmFactory::create("Danceability");
-    danceability->configure("sampleRate", sampleRate);
+    configureDanceability();
 
     // connect I/O algorithm
     danceability->input("signal").set(essentiaBuffer);
     danceability->output("danceability").set(danceabilityValue);
     danceability->output("dfa").set(dfaValues);
 
-    constexpr double analysisWindowSeconds = 10.0;
+    constexpr double maxAnalysisWindowSeconds = 15.0;
     constexpr double computeIntervalSeconds = 1.0;
 
+    const auto analysisWindowSeconds = apvts.getRawParameterValue("analysisWindowSeconds")->load();
     analysisWindowSamples = static_cast<size_t>(juce::jmax(1.0, sampleRate * analysisWindowSeconds));
     computeIntervalSamples = static_cast<size_t>(juce::jmax(1.0, sampleRate * computeIntervalSeconds));
     samplesSinceDanceabilityCompute = computeIntervalSamples;
     danceabilityValue = 0.f;
 
     essentiaBuffer.clear();
-    essentiaBuffer.reserve(analysisWindowSamples + static_cast<size_t>(juce::jmax(1, samplesPerBlock)));
+    essentiaBuffer.reserve(static_cast<size_t>(sampleRate * maxAnalysisWindowSeconds)
+                           + static_cast<size_t>(juce::jmax(1, samplesPerBlock)));
 }
 
 void EssentiaPluginAudioProcessor::releaseResources()
@@ -186,13 +240,16 @@ void EssentiaPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
 {
     juce::ignoreUnused(midiMessages);
 
-    if (danceability == nullptr || analysisWindowSamples == 0 || computeIntervalSamples == 0)
+    if (danceability == nullptr || computeIntervalSamples == 0)
         return;
 
     const int numSamples = buffer.getNumSamples();
     const int numInputChannels = juce::jmin(buffer.getNumChannels(), getTotalNumInputChannels());
     if (numSamples <= 0 || numInputChannels <= 0)
         return;
+
+    const auto analysisWindowSeconds = apvts.getRawParameterValue("analysisWindowSeconds")->load();
+    analysisWindowSamples = static_cast<size_t>(juce::jmax(1.0, currentSampleRate * analysisWindowSeconds));
 
     const auto previousSize = essentiaBuffer.size();
     essentiaBuffer.resize(previousSize + static_cast<size_t>(numSamples));
@@ -220,6 +277,7 @@ void EssentiaPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
         return;
 
     samplesSinceDanceabilityCompute = 0;
+    configureDanceability();
     danceability->compute();
 }
 
@@ -237,17 +295,17 @@ juce::AudioProcessorEditor* EssentiaPluginAudioProcessor::createEditor()
 //==============================================================================
 void EssentiaPluginAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
-    juce::ignoreUnused(destData);
+    auto state = apvts.copyState();
+    std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    copyXmlToBinary(*xml, destData);
 }
 
 void EssentiaPluginAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
-    juce::ignoreUnused(data, sizeInBytes);
+    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+
+    if (xmlState != nullptr && xmlState->hasTagName(apvts.state.getType()))
+        apvts.replaceState(juce::ValueTree::fromXml(*xmlState));
 }
 
 //==============================================================================

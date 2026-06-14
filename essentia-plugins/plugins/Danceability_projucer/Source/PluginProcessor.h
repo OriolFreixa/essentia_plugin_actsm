@@ -68,7 +68,12 @@ public:
     // --- quick access to the most recent danceability value ----------
     float getDanceability() const { return danceabilityValue; }
 
+    juce::AudioProcessorValueTreeState apvts;
+
 private:
+    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    void configureDanceability();
+
     essentia::standard::Algorithm* danceability = nullptr;
     essentia::Real danceabilityValue = 0.f;
     std::vector<essentia::Real> dfaValues;
@@ -76,6 +81,7 @@ private:
     size_t analysisWindowSamples = 0;
     size_t computeIntervalSamples = 0;
     size_t samplesSinceDanceabilityCompute = 0;
+    double currentSampleRate = 44100.0;
     
     int maxSampleSize {1024};
     //==============================================================================
