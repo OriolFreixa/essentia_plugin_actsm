@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="Aci7b9" name="RMS" projectType="audioplug" useAppConfig="0"
+<JUCERPROJECT id="Aci7b9" name="Danceability" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="Music Technology Group"
               companyWebsite="https://www.upf.edu/web/mtg/" pluginManufacturer="Essentia">
-  <MAINGROUP id="ID46dc" name="RMS">
+  <MAINGROUP id="ID46dc" name="Danceability">
     <GROUP id="{6864D1F1-B977-ED23-B825-C47DBBCA1E9D}" name="Source">
       <FILE id="oIOfgY" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
@@ -18,27 +18,29 @@
     <FILE id="cUaatq" name="upflogo.png" compile="0" resource="1" file="../assets/upflogo.png"/>
   </MAINGROUP>
   <MODULES>
-    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
-    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
-    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="0"
-            useGlobalPath="0"/>
-    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
-    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
-    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
-    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
-    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
-    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
-    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
-    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+            useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors_headless" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
   </MODULES>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" extraCompilerFlags="-I../../../../build_external/install/include/essentia&#10;-I/opt/homebrew/opt/eigen@3/include/eigen3"
                extraLinkerFlags="-L../../../../build_external/install/lib" externalLibraries="essentia">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="RMS" customXcodeFlags="DSTROOT=$(PROJECT_DIR)/build/install"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="RMS" customXcodeFlags="DSTROOT=$(PROJECT_DIR)/build/install"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="Danceability" customXcodeFlags="DSTROOT=$(PROJECT_DIR)/build/install"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="Danceability" customXcodeFlags="DSTROOT=$(PROJECT_DIR)/build/install"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../../external/JUCE/modules"/>
@@ -53,6 +55,7 @@
         <MODULEPATH id="juce_graphics" path="../../external/JUCE/modules"/>
         <MODULEPATH id="juce_gui_basics" path="../../external/JUCE/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../../external/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors_headless" path="../../../../../../JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
     <VS2022 targetFolder="Builds/VisualStudio2022">
@@ -73,6 +76,7 @@
         <MODULEPATH id="juce_graphics" path="../../external/JUCE/modules"/>
         <MODULEPATH id="juce_gui_basics" path="../../external/JUCE/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../../external/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors_headless" path="../../../../../../JUCE/modules"/>
       </MODULEPATHS>
     </VS2022>
     <LINUX_MAKE targetFolder="Builds/LinuxMakefile">
@@ -93,6 +97,7 @@
         <MODULEPATH id="juce_graphics" path="../../external/JUCE/modules"/>
         <MODULEPATH id="juce_gui_basics" path="../../external/JUCE/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../../external/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors_headless" path="../../../../../../JUCE/modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
   </EXPORTFORMATS>

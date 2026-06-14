@@ -65,14 +65,13 @@ public:
     void computeEssentiaAlgorithms();
     void cleanupEssentia();
       
-    // --- quick access to the most recent RMS in both units ----------
-    float getRMSLinear() const { return rmsValue; }
-
-    float getRMSdB() const { return static_cast<float>(essentia::amp2db(rmsValue)); }
+    // --- quick access to the most recent danceability value ----------
+    float getDanceability() const { return danceabilityValue; }
 
 private:
-    essentia::standard::Algorithm* rms;
-    essentia::Real rmsValue;
+    essentia::standard::Algorithm* danceability = nullptr;
+    essentia::Real danceabilityValue = 0.f;
+    std::vector<essentia::Real> dfaValues;
     std::vector<essentia::Real> essentiaBuffer;
     
     int maxSampleSize {1024};

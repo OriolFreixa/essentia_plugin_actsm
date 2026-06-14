@@ -20,7 +20,7 @@ EssentiaPluginAudioProcessorEditor::EssentiaPluginAudioProcessorEditor(EssentiaP
     setLookAndFeel(&modernLF);
 
     // Setup title label
-    titleLabel.setText("RMS Analyzer", juce::dontSendNotification);
+    titleLabel.setText("Danceability Analyzer", juce::dontSendNotification);
     titleLabel.setFont(juce::Font(24.0f));
     titleLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     titleLabel.setJustificationType(juce::Justification::centred);
@@ -29,39 +29,25 @@ EssentiaPluginAudioProcessorEditor::EssentiaPluginAudioProcessorEditor(EssentiaP
     addAndMakeVisible(titleLabel);
 
     // Setup subtitle label
-    subtitleLabel.setText("Real-time root mean square analysis", juce::dontSendNotification);
+    subtitleLabel.setText("Real-time danceability estimation", juce::dontSendNotification);
     subtitleLabel.setFont(juce::Font(14.0f));
     subtitleLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
     subtitleLabel.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(subtitleLabel);
 
-    // Setup RMS Linear value label
-    rmsLinearValueLabel.setText("0.000", juce::dontSendNotification);
-    rmsLinearValueLabel.setFont(juce::Font(48.0f, juce::Font::bold));
-    rmsLinearValueLabel.setColour(juce::Label::textColourId, juce::Colour(0xffed64a6)); // Pink/magenta
-    rmsLinearValueLabel.setJustificationType(juce::Justification::centred);
-    addAndMakeVisible(rmsLinearValueLabel);
+    // Setup danceability value label
+    danceabilityValueLabel.setText("0.000", juce::dontSendNotification);
+    danceabilityValueLabel.setFont(juce::Font(56.0f, juce::Font::bold));
+    danceabilityValueLabel.setColour(juce::Label::textColourId, juce::Colour(0xffed64a6)); // Pink/magenta
+    danceabilityValueLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(danceabilityValueLabel);
 
-    // Setup RMS Linear unit label
-    rmsLinearUnitLabel.setText("Linear RMS", juce::dontSendNotification);
-    rmsLinearUnitLabel.setFont(juce::Font(14.0f));
-    rmsLinearUnitLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
-    rmsLinearUnitLabel.setJustificationType(juce::Justification::centred);
-    addAndMakeVisible(rmsLinearUnitLabel);
-
-    // Setup RMS dB value label
-    rmsDbValueLabel.setText("-60.0 dB", juce::dontSendNotification);
-    rmsDbValueLabel.setFont(juce::Font(48.0f, juce::Font::bold));
-    rmsDbValueLabel.setColour(juce::Label::textColourId, juce::Colour(0xffb794f6)); // Purple
-    rmsDbValueLabel.setJustificationType(juce::Justification::centred);
-    addAndMakeVisible(rmsDbValueLabel);
-
-    // Setup RMS dB unit label
-    rmsDbUnitLabel.setText("RMS (dB)", juce::dontSendNotification);
-    rmsDbUnitLabel.setFont(juce::Font(14.0f));
-    rmsDbUnitLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
-    rmsDbUnitLabel.setJustificationType(juce::Justification::centred);
-    addAndMakeVisible(rmsDbUnitLabel);
+    // Setup danceability unit label
+    danceabilityUnitLabel.setText("Danceability", juce::dontSendNotification);
+    danceabilityUnitLabel.setFont(juce::Font(14.0f));
+    danceabilityUnitLabel.setColour(juce::Label::textColourId, juce::Colour(0xffa0aec0));
+    danceabilityUnitLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(danceabilityUnitLabel);
 
     // Load logos from binary data
     upfLogo      = juce::ImageCache::getFromMemory(BinaryData::upflogo_png, BinaryData::upflogo_pngSize);
@@ -88,13 +74,11 @@ EssentiaPluginAudioProcessorEditor::~EssentiaPluginAudioProcessorEditor()
 
 void EssentiaPluginAudioProcessorEditor::timerCallback()
 {
-    // Update RMS value displays
-    const float rmsLinear = processorRef.getRMSLinear();
-    const float rmsdB  = processorRef.getRMSdB();
+    // Update danceability value display
+    const float danceability = processorRef.getDanceability();
 
     // Update labels
-    rmsLinearValueLabel.setText(juce::String(rmsLinear, 3), juce::dontSendNotification);
-    rmsDbValueLabel.setText(juce::String(rmsdB, 1) + " dB", juce::dontSendNotification);
+    danceabilityValueLabel.setText(juce::String(danceability, 3), juce::dontSendNotification);
 
     repaint();
 }
@@ -113,32 +97,19 @@ void EssentiaPluginAudioProcessorEditor::paint(juce::Graphics& g)
     g.setColour(juce::Colour(0xff3a4553));
     g.drawRoundedRectangle(containerBounds, 16.0f, 1.0f);
 
-    // Draw value display backgrounds with more prominent styling
-    const auto linearValueBounds = getLocalBounds()
+    // Draw value display background with more prominent styling
+    const auto danceabilityValueBounds = getLocalBounds()
                                        .reduced(30, 0)
-                                       .withY(static_cast<int>(getHeight() * 0.25f))
-                                       .withHeight(static_cast<int>(getHeight() * 0.25f))
+                                       .withY(static_cast<int>(getHeight() * 0.30f))
+                                       .withHeight(static_cast<int>(getHeight() * 0.30f))
                                        .withWidth(getWidth() - 60)
                                        .toFloat();
 
-    const auto dbValueBounds = getLocalBounds()
-                                   .reduced(30, 0)
-                                   .withY(static_cast<int>(getHeight() * 0.50f))
-                                   .withHeight(static_cast<int>(getHeight() * 0.22f))
-                                   .withWidth(getWidth() - 60)
-                                   .toFloat();
-
-    // Linear RMS background
+    // Danceability background
     g.setColour(juce::Colour(0xff1a202c));
-    g.fillRoundedRectangle(linearValueBounds, 12.0f);
+    g.fillRoundedRectangle(danceabilityValueBounds, 12.0f);
     g.setColour(juce::Colour(0xffed64a6).withAlpha(0.3f)); // Pink accent
-    g.drawRoundedRectangle(linearValueBounds, 12.0f, 2.0f);
-
-    // dB RMS background
-    g.setColour(juce::Colour(0xff1a202c));
-    g.fillRoundedRectangle(dbValueBounds, 12.0f);
-    g.setColour(juce::Colour(0xffb794f6).withAlpha(0.3f)); // Purple accent
-    g.drawRoundedRectangle(dbValueBounds, 12.0f, 2.0f);
+    g.drawRoundedRectangle(danceabilityValueBounds, 12.0f, 2.0f);
 
     // Footer layout with consistent positioning
     const float footerBaseline     = 20.0f;
@@ -187,10 +158,8 @@ void EssentiaPluginAudioProcessorEditor::resized()
     // Fixed layout values for cleaner, more focused layout
     const float titleY         = 0.08f;
     const float subtitleY      = 0.16f;
-    const float linearValueY   = 0.28f;
-    const float linearUnitY    = 0.45f;
-    const float dbValueY       = 0.52f; // Positioned to avoid logo overlap
-    const float dbUnitY        = 0.68f;
+    const float danceabilityValueY = 0.36f;
+    const float danceabilityUnitY  = 0.55f;
     const float footerBaseline = 20.0f;
     const float footerTextGap  = 5.4f;
 
@@ -198,11 +167,9 @@ void EssentiaPluginAudioProcessorEditor::resized()
     titleLabel.setBoundsRelative(0.0f, titleY, 1.0f, 0.08f);
     subtitleLabel.setBoundsRelative(0.0f, subtitleY, 1.0f, 0.05f);
 
-    // Larger, more prominent value displays stacked vertically
-    rmsLinearValueLabel.setBoundsRelative(0.1f, linearValueY, 0.8f, 0.12f);
-    rmsLinearUnitLabel.setBoundsRelative(0.1f, linearUnitY, 0.8f, 0.04f);
-    rmsDbValueLabel.setBoundsRelative(0.1f, dbValueY, 0.8f, 0.12f);
-    rmsDbUnitLabel.setBoundsRelative(0.1f, dbUnitY, 0.8f, 0.04f);
+    // Larger, more prominent value display
+    danceabilityValueLabel.setBoundsRelative(0.1f, danceabilityValueY, 0.8f, 0.14f);
+    danceabilityUnitLabel.setBoundsRelative(0.1f, danceabilityUnitY, 0.8f, 0.04f);
 
     // Position "powered by" text above Essentia logo
     const float logoHeight   = 32.0f; // Compact for the layout

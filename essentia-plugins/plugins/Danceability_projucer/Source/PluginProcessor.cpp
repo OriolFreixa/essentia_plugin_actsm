@@ -117,25 +117,29 @@ void EssentiaPluginAudioProcessor::applyZeroPadding(std::vector<Real>& buffer, i
 //==============================================================================
 void EssentiaPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    juce::ignoreUnused(sampleRate, samplesPerBlock);
+    juce::ignoreUnused(samplesPerBlock);
     
     essentia::init();
     
-    rms = AlgorithmFactory::create("RMS");
+    danceability = AlgorithmFactory::create("Danceability");
+    danceability->configure("sampleRate", sampleRate);
 
     // connect I/O algorithm
-    rms->input("array").set(essentiaBuffer);
-    rms->output("rms").set(rmsValue);
+    danceability->input("signal").set(essentiaBuffer);
+    danceability->output("danceability").set(danceabilityValue);
+    danceability->output("dfa").set(dfaValues);
   
     // prime once with a dummy frame to avoid allocations in the audio thread
-    essentiaBuffer.assign(16, 0.f);
-    rms->compute();
+    const auto analysisSamples = static_cast<size_t>(juce::jmax(1.0, sampleRate));
+    essentiaBuffer.assign(analysisSamples, 0.f);
+    danceability->compute();
 }
 
 void EssentiaPluginAudioProcessor::releaseResources()
 {
-    delete rms;
-    rms = nullptr;
+    delete danceability;
+    danceability = nullptr;
+    dfaValues.clear();
     essentiaBuffer.clear();
     essentia::shutdown();
 }
@@ -173,8 +177,12 @@ void EssentiaPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
     // process single-channel for now
     const float* in = buffer.getReadPointer(0);
     essentiaBuffer.assign(in, in + buffer.getNumSamples());
+    
+    const auto minFrameSamples = static_cast<size_t>(juce::jmax(1.0, getSampleRate() * 0.01));
+    if (essentiaBuffer.size() < minFrameSamples)
+        essentiaBuffer.resize(minFrameSamples, 0.f);
 
-    rms->compute();
+    danceability->compute();
 }
 
 //==============================================================================

@@ -34,10 +34,8 @@ private:
     // UI Components
     juce::Label titleLabel;
     juce::Label subtitleLabel;
-    juce::Label rmsLinearValueLabel;
-    juce::Label rmsDbValueLabel;
-    juce::Label rmsLinearUnitLabel;
-    juce::Label rmsDbUnitLabel;
+    juce::Label danceabilityValueLabel;
+    juce::Label danceabilityUnitLabel;
 
     // Custom styling
     ModernLookAndFeel modernLF;
