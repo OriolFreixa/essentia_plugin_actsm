@@ -1,0 +1,135 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{hyperref}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=blue,
+  pdfauthor={Oriol Freixa},
+  pdftitle={Essentia Danceability Plugin Report}
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  columns=fullflexible,
+  backgroundcolor=\color{black!3}
+}
+
+\title{Essentia Danceability Plugin}
+\author{Oriol Freixa}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+
+We followed the Essentia plugins setup, built the required JUCE/Essentia
+dependencies, and created a new Projucer plugin from the RMS template. We
+renamed the project to \texttt{Danceability} and adapted the RMS analyzer into
+a VST3 analyzer based on Essentia's \texttt{Danceability} algorithm.
+
+The source code is available in the GitHub repository
+\href{https://github.com/OriolFreixa/essentia_plugin_actsm}{OriolFreixa/essentia\_plugin\_actsm}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.82\linewidth]{\detokenize{../imgs_and_vids/Screenshot 2026-06-14 at 20.06.04.png}}
+  \caption{Danceability plugin loaded in Ableton Live.}
+\end{figure}
+
+\section{Implementation}
+
+We replaced the RMS algorithm with \texttt{Danceability}. Since this descriptor
+needs a longer signal than a normal DAW audio callback, we adapted the
+processor so that it stored a rolling mono analysis window and computed the
+descriptor periodically instead of per block.
+
+\begin{lstlisting}[language=C++]
+danceability = AlgorithmFactory::create("Danceability");
+danceability->input("signal").set(essentiaBuffer);
+danceability->output("danceability").set(danceabilityValue);
+danceability->output("dfa").set(dfaValues);
+\end{lstlisting}
+
+We connected both Essentia outputs: the scalar \texttt{danceability} value is
+shown in the UI, while the \texttt{dfa} vector is kept internally because it is
+part of the algorithm output but not useful as a main user-facing value.
+
+\begin{lstlisting}[language=C++]
+essentiaBuffer.resize(previousSize + numSamples);
+// Mix host input to mono and append it to the rolling window.
+
+if (essentiaBuffer.size() > analysisWindowSamples)
+    essentiaBuffer.erase(essentiaBuffer.begin(),
+                         essentiaBuffer.begin() + samplesToDrop);
+
+if (essentiaBuffer.size() >= analysisWindowSamples)
+    danceability->compute();
+\end{lstlisting}
+
+\section{Parameters}
+
+We exposed \texttt{minTau}, \texttt{maxTau}, and \texttt{tauMultiplier} because
+they are real Essentia Danceability parameters and make the analysis tunable
+from the host. We used \texttt{AudioProcessorValueTreeState} so the values can
+be automated and saved with the session.
+
+\begin{lstlisting}[language=C++]
+params.push_back(std::make_unique<juce::AudioParameterFloat>(
+    juce::ParameterID {"minTau", 1}, "minTau",
+    juce::NormalisableRange<float> {50.f, 1000.f, 10.f}, 310.f));
+
+params.push_back(std::make_unique<juce::AudioParameterFloat>(
+    juce::ParameterID {"maxTau", 1}, "maxTau",
+    juce::NormalisableRange<float> {1000.f, 8800.f, 100.f}, 8800.f));
+
+params.push_back(std::make_unique<juce::AudioParameterFloat>(
+    juce::ParameterID {"tauMultiplier", 1}, "tauMultiplier",
+    juce::NormalisableRange<float> {1.01f, 1.5f, 0.01f}, 1.1f));
+\end{lstlisting}
+
+We also added \texttt{Analysis Window} as a useful extra parameter. It is not
+an Essentia Danceability parameter, but it controls how many seconds of recent
+audio we keep before analysis, which makes the plugin more practical in a DAW.
+
+\begin{lstlisting}[language=C++]
+params.push_back(std::make_unique<juce::AudioParameterFloat>(
+    juce::ParameterID {"analysisWindowSeconds", 1}, "Analysis Window",
+    juce::NormalisableRange<float> {1.f, 15.f, 0.1f}, 10.f));
+
+const auto analysisWindowSeconds =
+    apvts.getRawParameterValue("analysisWindowSeconds")->load();
+
+analysisWindowSamples =
+    static_cast<size_t>(currentSampleRate * analysisWindowSeconds);
+\end{lstlisting}
+
+\section{Interface And Test}
+
+We replaced the RMS labels with a compact Danceability Analyzer interface,
+added sliders for the exposed parameters, and kept the UPF and Essentia logos.
+We tested the plugin in Ableton Live using the included test project and
+recorded a short demo video. The video is available in
+\texttt{imgs\_and\_vids/danceability-demo.mov}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.82\linewidth]{\detokenize{../imgs_and_vids/Screenshot 2026-06-14 at 20.18.24.png}}
+  \caption{Analyzer running and showing a non-zero Danceability value.}
+\end{figure}
+
+\end{document}
